@@ -1,16 +1,20 @@
+# # # # # # # # # # # # # # # # # # # # # # # #
+#
+#    降维模块
+#
+# # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
-from numpy import linalg as LA
 from scipy.linalg import eig
 
 
-class lda():
-    '''
+class LDA:
+    """
     监督降维 - 线性判别分析
 
     学习核心：
         广义特征值分解
-    '''
+    """
 
     def __init__(self, data, label):
         self.data = []

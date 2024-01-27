@@ -20,7 +20,7 @@ if flag[0]:
     dataname = 'watermelon_3.0alpha'
     data, label, tag = pre.read(dataname)
     print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
-    l = regress.logit(data, label)
+    l = regress.Logit(data, label)
     l.train()
     post.item_print('beta vector', l.beta, newline=True)
     post.plot(data, label, line=l.beta, title=dataname, tag=tag)
@@ -53,7 +53,7 @@ if flag[2]:
     np.random.shuffle(randInd)
     data = data[: , randInd]
     label = np.array(label)[randInd].tolist()
-    l = regress.rls(data, label)
+    l = regress.RLS(data, label)
     l.train()
     post.item_print('w matrix', l.w, newline=True)
     post.plot(data, label, line=l.w, title=dataname, tag=tag)
@@ -68,7 +68,7 @@ if flag[3]:
     dataname = 'watermelon_3.0'
     data, label, tag = pre.read(dataname)
     print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
-    n = neural.mff1(data, label, hidden_neuron_count=4)
+    n = neural.MFF1(data, label, hidden_neuron_count=4)
     print(0.5 * np.mean(np.linalg.norm(n.label.T - n.classify(data), axis=0)))
     n.train(200, True)
     #post.item_print('hidden-layyer w:', n.hidden_layer.w, True)
@@ -85,6 +85,6 @@ if flag[4]:
     dataname = 'watermelon_3.0alpha'
     data, label, tag = pre.read(dataname)
     print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
-    n = neural.som(data, network_size=10)
+    n = neural.SOM(data, network_size=10)
     n.train(cycle_count=2000)
     post.mat_scatter(n.classify(data), label)

@@ -1,3 +1,9 @@
+# # # # # # # # # # # # # # # # # # # # # # # #
+#
+#    神经网络模块
+#
+# # # # # # # # # # # # # # # # # # # # # # # #
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,7 +11,7 @@ import pre
 import post
 
 
-class _Layer():
+class _Layer:
 
     def __init__(self, input_n, neuron_n):
         self.m = neuron_n
@@ -13,14 +19,14 @@ class _Layer():
         self.w = np.random.random((input_n, neuron_n))
         self.b = np.random.random(neuron_n)
 
-    def actFunc(self, x):
+    def act_func(self, x):
         return 1.0 / (1.0 + np.exp(-x))
 
     def __call__(self, input):
-        return self.actFunc(np.dot(self.w.T, input).T - self.b).T
+        return self.act_func(np.dot(self.w.T, input).T - self.b).T
 
 
-class actFunc():
+class ActFunc:
 
     @staticmethod
     def sigmoid(z):
@@ -36,14 +42,14 @@ class actFunc():
         return z
 
 
-class _FullyConnectedLayer():
+class _FullyConnectedLayer:
 
-    def __init__(self, n_in, n_out, activation_fn=actFunc.sigmoid, p_dropout=0.0):
+    def __init__(self, n_in, n_out, activation_fn=ActFunc.sigmoid, p_dropout=0.0):
         pass
 
 
-class mff1():
-    '''
+class MFF1:
+    """
     神经网络 - 单隐层前馈网络
 
     配置：
@@ -52,7 +58,7 @@ class mff1():
 
     学习核心：
         误差逆传播(BP)算法：最小均方算法+梯度下降法
-    '''
+    """
 
     def __init__(self, data, label, hidden_neuron_count=4):
         self.m = data.shape[1]
@@ -67,7 +73,7 @@ class mff1():
         self.output_layer = _Layer(hidden_neuron_count, len(set(label)))
         self.cycle_i = 0
         # 迭代监测
-        self.feedback_win = post.PlotAni('Training of Neural-network (BP Alg.)',
+        self.feedback_win = post.PlotAniNet('Training of Neural-network (BP Alg.)',
                                          'Iterration', 'Accumulate Error')
 
     def _BP_standard(self, learning_rate=1):
@@ -118,17 +124,17 @@ class mff1():
             self.feedback_win.update()
             self.cycle_i += 1
 
-    def classify(self, x, bool=False):
+    def classify(self, x):
         return self.output_layer(self.hidden_layer(x))
 
 
-class som():
-    '''
+class SOM:
+    """
     神经网络/聚类 - 自组织映射网络
 
     学习核心：
         无
-    '''
+    """
     def __init__(self, data, network_size=10):
         self.n, self.m = data.shape
         self.net_size = network_size
@@ -172,6 +178,5 @@ class som():
                 distance[:, :, i] = np.sum((self.network - data[: , i])**2, axis=2)
                 i += 1
         return distance == np.max(distance, axis=(0, 1))
-
 
 

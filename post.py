@@ -64,7 +64,7 @@ def plot(data, label, line=None, title=None, tag=None):
     plt.show()
 
 
-class PlotAni:
+class PlotAniNet:
     """
     以交互模式在同一子图中动态绘制多条曲线。
     """

@@ -1,16 +1,21 @@
+# # # # # # # # # # # # # # # # # # # # # # # #
+#
+#    前处理模块
+#
+# # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
 
 
 def write(dataname: str, data: np.ndarray, label=[], tag=[]):
-    '''
+    """
     Storage data set as file with readable format.
 
     :param dataname: name of the data set and output file
     :param data: data set (2-d numpy.ndarray object) to be written
     :param label: classification labels of all samples
     :param tag: description text of each attribute
-    '''
+    """
     m, n = data.shape
     has_label = bool(label)
     if not tag:
@@ -28,12 +33,12 @@ def write(dataname: str, data: np.ndarray, label=[], tag=[]):
 
 
 def read(dataname: str):
-    '''
+    """
     Read data set from file.
 
     :param dataname: name of data set file
     :return: data, classification labels, attribute tags
-    '''
+    """
     with open('.\\dataBase\\%s.dat' % dataname, 'r', encoding='utf-8') as f:
         try:
             header = f.readline()[: -1].split(',')
@@ -59,12 +64,12 @@ def read(dataname: str):
 
 
 def normalize(data: np.ndarray):
-    '''
+    """
     Nomalize each feature of data to range 0~1
 
     :param data: data to process
     :return: normalized data
-    '''
+    """
     return data / np.tile(np.max(data, axis=data.ndim - 1, keepdims=True), data.shape[1])
 
 

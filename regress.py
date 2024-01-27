@@ -1,15 +1,20 @@
+# # # # # # # # # # # # # # # # # # # # # # # #
+#
+#    回归模块
+#
+# # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
 from optimization import *
 
 
-class logit():
-    '''
+class Logit:
+    """
     分类 - 对数几率回归
 
     学习核心：
         数值优化算法 | 牛顿法、(随机)梯度下降法 等
-    '''
+    """
 
     def __init__(self, data, label):
         self.m = data.shape[1]
@@ -40,25 +45,25 @@ class logit():
         return 1 / (1 + np.exp(-(np.dot(self.beta[: -1, 0], x) + self.beta[-1, 0])))
 
 
-class lms():
-    '''
+class LMS:
+    """
     线性回归/自适应滤波器 - 最小均方算法
 
     学习核心：
         （随机）梯度下降法
-    '''
+    """
 
     def __init__(self):
         pass
 
 
-class rls():
-    '''
+class RLS:
+    """
     线性回归/自适应滤波器 - 递归最小方差算法
 
     学习核心：
         无
-    '''
+    """
 
     def __init__(self, data, label):
         self.m = data.shape[1]

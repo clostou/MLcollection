@@ -1,3 +1,9 @@
+# # # # # # # # # # # # # # # # # # # # # # # #
+#
+#    算法：卷积神经网络
+#
+# # # # # # # # # # # # # # # # # # # # # # # #
+
 import os
 import pickle
 import gzip
@@ -6,44 +12,47 @@ from time import time
 import numpy as np
 import torch
 import torch.nn.functional as tf
-from post import PlotAni
+from post import PlotAniNet
+
 
 '''问题
 1. 弃权下的逆传播是怎么样的
 2. 卷积池化复合层（最大池化）下BP算法里的神经元输入值计算
 '''
 
-#### 加载数据
+
+# # # # # # # # # # # #  加载数据  # # # # # # # # # # # #
+
 def load_data(path, encoding='ASCII'):
-    '''
+    """
     加载压缩的序列化数据（如MNIST数据集）
 
     :param path: 数据文件路径
     :param encoding: 序列化编码字符集
     :return: 反序列化对象
-    '''
+    """
     with gzip.open(path) as zf:
         return pickle.load(zf, encoding=encoding)
 
 
 def save_data(object, path):
-    '''
+    """
     保存为压缩的序列化数据
 
     :param object: 需要保存的Python对象
     :param path: 数据文件路径
     :param encoding: 序列化编码字符集
-    '''
+    """
     with gzip.open(path, 'wb') as zf:
         pickle.dump(object, zf)
 
 
 def load_mnist():
-    '''
+    """
     加载格式预处理的MNIST手写图像数据集 (float32)
 
     :return: 训练数据、验证数据、测试数据的元组
-    '''
+    """
     data_path = r".\dataBase\mnist_formated.pkl.gz"
     if os.path.exists(data_path):
         return load_data(data_path)
@@ -61,8 +70,9 @@ def load_mnist():
         return formated_data
 
 
-#### 人工神经元的激活函数
-class sigmoid():
+# # # # # # # # # # # #  人工神经元的激活函数  # # # # # # # # # # # #
+
+class sigmoid:
 
     @staticmethod
     def fn(z):
@@ -76,7 +86,7 @@ class sigmoid():
         return np.multiply(a, 1.0 - a)
 
 
-class tanh():
+class tanh:
 
     @staticmethod
     def fn(z):
@@ -90,7 +100,7 @@ class tanh():
         return 1.0 - a**2
 
 
-class relu():
+class relu:
 
     @staticmethod
     def fn(z):
@@ -106,13 +116,14 @@ class relu():
         return a
 
 
-#### 前馈网络类，用于连接各层构成网络以及训练
-class Network():
+# # # # # # # # # # # #  前馈网络类，用于连接各层构成网络以及训练  # # # # # # # # # # # #
+
+class Network:
 
     def __init__(self, layers):
-        '''
+        """
         :param layers: 网络层对象的有序列表，描述了网络的结构
-        '''
+        """
         self.layers = layers
         self.layer_n = len(layers)
         self.dof = 0 # 网络参数量
@@ -126,16 +137,16 @@ class Network():
                                   np.zeros(layer.b.shape, dtype=np.float32)))
         self.epoch = 0
         self.best_test_accr = (0, 0.0, 0.0)
-        self.monitor = PlotAni('Training of CNN', 'Epoch', 'Accuracy (%)', 2,
-                               ['test data', 'training data'])
+        self.monitor = PlotAniNet('Training of CNN', 'Epoch', 'Accuracy (%)', 2,
+                                  ['test data', 'training data'])
 
     def _forword(self, input, dropout=False):
-        '''
+        """
         计算给定输入值下当前网络的输出
 
         :param input: 网络的输入值，为按行排布的二维numpy数组
         :param dropout: 是否用于训练
-        '''
+        """
         layer_i = 0
         value_forword = input.T
         while layer_i < self.layer_n:
@@ -144,14 +155,14 @@ class Network():
             layer_i += 1
 
     def _backword(self, output, eta=1.0, lmbda=0.0, mu=0.2):
-        '''
+        """
         由预期输出更新网络各层
 
         :param input: 网络的预期输出值，为按行排布的二维numpy数组
         :param eta: 学习率（调整步长）
         :param lmbda: 规范化参数
         :param mu: momentum梯度下降法的摩擦力项
-        '''
+        """
         layer_i = self.layer_n - 1
         value_backword = output.T
         decay_factor = lmbda * eta / self.num_training_batch # 规范化衰减项
@@ -169,13 +180,13 @@ class Network():
             layer_i -= 1
 
     def SGD(self, training_data, epochs, mini_batch_size, eta, lmbda, test_data):
-        '''
+        """
         :param training_data: 训练样本及其真实值的元组，均为按行排布的二维numpy数组
         :param epochs: 迭代回合数
         :param mini_batch_size: 小批量集的大小
         :param eta: 学习率
         :param test_data: 测试样本集，格式同training_data
-        '''
+        """
         self.eta = eta
         training_x, training_y = training_data
         num_training = len(training_y)
@@ -222,22 +233,24 @@ class Network():
         print("Best test accuracy of %.2f%% obtained at epoch %d\n"
               "Corresponding training accuracy of %.2f%%" % self.best_test_accr)
 
-
     def learning_rate(self, iteration):
         return self.eta
 
 
-#### 各类隐藏层和输出层
-class FullyConnectedLayer():
-    '''全连接层'''
+# # # # # # # # # # # #  各类隐藏层和输出层  # # # # # # # # # # # #
+
+class FullyConnectedLayer:
+    """
+    全连接层
+    """
 
     def __init__(self, n_in, n_out, activation_fn=sigmoid, p_dropout=0.0):
-        '''
+        """
         :param n_in: 输入向量的长度
         :param n_out: 输出向量的长度（即该层神经元的个数）
         :param activation_fn: 激活函数
         :param p_dropout: 弃权率
-        '''
+        """
         self.n_in = n_in
         self.n_out = n_out
         self.activation_fn = activation_fn
@@ -248,10 +261,10 @@ class FullyConnectedLayer():
         self.b = np.random.normal(loc=0.0, scale=1.0, size=(n_out, 1)).astype(np.float32)
 
     def propagate(self, input, dropout=False, **kwargs):
-        '''
+        """
         :param input: 上一层的输出值，为按列排布的二维numpy数组
         :param dropout: 是否用于训练，用来决定是否进行弃权
-        '''
+        """
         self._input = input
         if dropout: p_dropout = self.p_dropout
         else: p_dropout = 0.0
@@ -259,9 +272,9 @@ class FullyConnectedLayer():
         self.output, self.dropout_mask = dropout_layer(self.output_origin, p_dropout)
 
     def feedback(self, output_g):
-        '''
+        """
         :param output_g: 该层输出值的误差负梯度，为按列排布的二维numpy数组
-        '''
+        """
         error = np.multiply(self.activation_fn.d(self.output_origin), output_g)
         error_dropout = dropout_layer(error, self.p_dropout, self.dropout_mask)
         self.input_g = np.dot(self.w.T, error_dropout)
@@ -272,17 +285,19 @@ class FullyConnectedLayer():
         self.grad_b = np.mean(error_dropout, axis=1, keepdims=True)
 
 
-class ConvPoolLayer():
-    '''卷积池化复合层'''
+class ConvPoolLayer:
+    """
+    卷积池化复合层
+    """
 
     def __init__(self, filter_shape, image_shape, pooling='max', poolsize=(2, 2), activation_fn=sigmoid):
-        '''
+        """
         :param filter_shape: 4元数组，分别为滤镜的个数、通道数、高度、宽度
         :param image_shape: 3元数组，分别为图片的通道数、高度、宽度
         :param pooling: 池化层类型
         :param poolsize: 2元数组，为池化单元的尺寸
         :param activation_fn: 激活函数
-        '''
+        """
         self.filter_shape = filter_shape
         self._padding = (filter_shape[2] - 1, filter_shape[3] - 1)
         self.image_shape = (-1, *image_shape)
@@ -296,9 +311,9 @@ class ConvPoolLayer():
         self.b = np.random.normal(loc=0.0, scale=1.0, size=(filter_shape[0], )).astype(np.float32)
 
     def propagate(self, input, **kwargs):
-        '''
+        """
         :param input: 上一层的输出值，为按列排布的二维numpy数组
-        '''
+        """
         self._w = torch.tensor(self.w)
         self._b = torch.tensor(self.b)
         self._input = torch.tensor(input.T.reshape(self.image_shape)) # 卷积层输入（tensor）
@@ -320,9 +335,9 @@ class ConvPoolLayer():
         self.output = self._input_shrinked.reshape((self.num_mini_batch, -1)).T.numpy()
 
     def feedback(self, output_g):
-        '''
+        """
         :param output_g: 该层输出值的误差负梯度，按列排布的二维numpy数组
-        '''
+        """
         error_pool = torch.tensor(output_g).reshape(self._input_shrinked.shape)
         # 上采样
         if self.pooling == 'max':
@@ -348,14 +363,16 @@ class ConvPoolLayer():
         self.grad_b = grad_b.numpy()
 
 
-class SoftmaxLayer():
-    '''柔性最大值层（输出层）'''
+class SoftmaxLayer:
+    """
+    柔性最大值层（输出层）
+    """
 
     def __init__(self, n_in, n_out):
-        '''
+        """
         :param n_in: 输入向量的长度
         :param n_out: 输出向量的长度（即该层神经元的个数）
-        '''
+        """
         self.n_in = n_in
         self.n_out = n_out
         # 初始化权重与偏差
@@ -367,19 +384,19 @@ class SoftmaxLayer():
         return z_exp / np.sum(z_exp, axis=0)
 
     def propagate(self, input, **kwargs):
-        '''
+        """
         :param input: 上一层的输出值，为按列排布的二维numpy数组
-        '''
+        """
         self._input = input
         self.output = self._softmax(np.dot(self.w, input) + self.b)
         self.output_class = np.argmax(self.output, axis=0)
 
     def feedback(self, y):
-        '''
+        """
         对数似然代价函数
 
         :param y: 样本真实值，为按列排布的二维numpy数组
-        '''
+        """
         error = y - self.output
         self.input_g = np.dot(self.w.T, error)
         self.grad_w = np.zeros(self.w.shape, dtype=np.float32)
@@ -389,12 +406,12 @@ class SoftmaxLayer():
         self.grad_b = np.mean(error, axis=1, keepdims=True)
 
     def accuracy(self, y):
-        '''
+        """
         计算当前网络在输入集合上的性能
 
         :param y: 样本真实值，为按列排布的二维numpy数组
         :return: 代价函数值和分类准确率
-        '''
+        """
         y_class = np.argmax(y, axis=0)
         cost = - np.mean(np.log(self.output[y_class, np.arange(y.shape[-1])]))
         accuracy =  100 * np.mean(y_class == self.output_class)
@@ -402,14 +419,14 @@ class SoftmaxLayer():
 
 
 def dropout_layer(layer, p_dropout, dropout_mask=None):
-    '''
+    """
     弃权技术，用于删除层上的部分神经元
 
     :param layer: 待弃权的层
     :param p_dropout: 需删除的神经元的占比
     :param dropout_mask: （可选）弃权掩膜，用于强制指定需保留的神经元
     :return: 处理后的层，形状与处理前相同；若未提供dropout_mask参数，则同时返回保留神经元的索引
-    '''
+    """
     if isinstance(dropout_mask, type(None)):
         n = len(layer)
         if p_dropout == 0: return layer, np.arange(n)
@@ -446,4 +463,5 @@ if __name__ == '__main__':
     '''
     #net1.SGD(training_data, 200, 10, 0.002, 0.1, test_data)
     net2.SGD(training_data, 200, 10, 0.002, 0.1, test_data)
+
 

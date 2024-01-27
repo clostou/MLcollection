@@ -6,7 +6,7 @@ import neural
 import post
 
 import numpy as np
-#import numpy.linalg as LA
+#import numpy.linalg as la
 #from matplotlib import pyplot as plt
 
 

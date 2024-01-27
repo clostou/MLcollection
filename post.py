@@ -1,20 +1,46 @@
+# # # # # # # # # # # # # # # # # # # # # # # #
+#
+#    后处理模块
+#
+# # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 
-def item_print(tag, object, newline=False, indent=2):
+plt.rcParams["font.sans-serif"] = ["SimHei"]
+plt.rcParams["axes.unicode_minus"] = False
+
+
+def item_print(tag, obj, newline=False, indent=2):
     if newline:
         text = '\n'.join(map(lambda s: ' ' * indent + s, str(object).split('\n')))
         print('%s:\n%s' % (tag, text))
     else:
-        print('%s: %s' % (tag, object))
+        print('%s: %s' % (tag, obj))
+
+
+def interact():
+    """
+    模拟控制台交互
+    """
+    while True:
+        cmd = input(">>> ")
+        if cmd == 'exit':
+            break
+        try:
+            value = eval(cmd)
+        except SyntaxError:
+            exec(cmd)
+        else:
+            if not isinstance(value, type(None)):
+                print(value)
 
 
 def plot(data, label, line=None, title=None, tag=None):
-    '''
+    """
     绘制带标签数据的散点图，可额外以参数定义一条直线
-    '''
+    """
     fig = plt.figure()
     if title:
         fig.suptitle(title)
@@ -22,8 +48,7 @@ def plot(data, label, line=None, title=None, tag=None):
     if tag:
         ax.set_xlabel(tag[0])
         ax.set_ylabel(tag[1])
-    ax.scatter(data[0, : ], data[1, : ], marker='o', \
-               c=label, cmap=plt.get_cmap('seismic'))
+    ax.scatter(data[0, : ], data[1, : ], marker='o', c=label, cmap=plt.get_cmap('seismic'))
     if hasattr(line, '__iter__'):
         a, b, c = line.reshape(-1)
         if a * b <= 0:
@@ -39,10 +64,10 @@ def plot(data, label, line=None, title=None, tag=None):
     plt.show()
 
 
-class PlotAni():
-    '''
-    以交互模式动态绘制多条曲线
-    '''
+class PlotAni:
+    """
+    以交互模式在同一子图中动态绘制多条曲线。
+    """
 
     def __init__(self, title='', xlabel='x', ylabel='y', line_count=1, legend=None):
         self.fig, self.ax = plt.subplots()
@@ -81,10 +106,57 @@ class PlotAni():
             plt.close(self.fig)
 
 
-def mat_scatter(matrix, label, title='Data Distribution', xlabel='x', ylabel='y', color=['red', 'blue']):
-    '''
+class PlotAniOptim:
+    """
+    以交互模式在不同子图中动态绘制曲线，子图可包含二元常量函数的云图。
+
+    用于：优化算法可视化
+    """
+
+    def __init__(self, title, layout, subtitle):
+        self.subtitle = subtitle
+        self.fig = plt.figure(figsize=(12, 6))
+        self.fig.suptitle(title)
+        self.ax_list = []
+        self.line_list = []
+        for i in range(layout[0]):
+            ax = self.fig.add_subplot(layout[1], layout[2], i + 1)
+            ax.set_title(subtitle[i])
+            self.ax_list.append(ax)
+            line, = ax.plot([], [], 'r-o', linewidth='0.8', markersize='1')
+            self.line_list.append(line)
+        self.fig.tight_layout()
+        self.fig.show()
+
+    def plotFunc(self, func, xrange, yrange, nline=10):
+        x = np.linspace(*xrange, nline * 10)
+        y = np.linspace(*yrange, nline * 10)
+        X, Y = np.meshgrid(x, y)
+        Z = func(X, Y)
+        for ax in self.ax_list:
+            ax.contourf(X, Y, Z, nline, cmap='RdBu_r', linestyles='dashed', zorder=1)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_xlim(xrange)
+            ax.set_ylim(yrange)
+            ax.autoscale_view()
+            ax.grid()
+        plt.pause(0.001)
+
+    def addPoint(self, i, x, y):
+        line = self.line_list[i]
+        xdata, ydata = line.get_data()
+        line.set_data(np.append(xdata, x), np.append(ydata, y))
+        self.ax_list[i].set_title(f"{self.subtitle[i]} - iter {len(xdata)}")
+        plt.pause(0.001)
+
+
+def mat_scatter(matrix, label, title='Data Distribution', xlabel='x', ylabel='y', colors=None):
+    """
     用于绘制som结果分布的散点图
-    '''
+    """
+    if colors is None:
+        colors = ['red', 'blue']
     fig, ax = plt.subplots()
     fig.suptitle(title)
     label = np.array(label)
@@ -96,7 +168,7 @@ def mat_scatter(matrix, label, title='Data Distribution', xlabel='x', ylabel='y'
         matrix_i = np.sum(matrix[:, :, label == classes[i]], axis=2)
         data = 1e5 * matrix_i / (count * (m + n))
         ax.scatter(X.reshape(-1), Y.reshape(-1), s=data.reshape(-1),
-                   marker='o', c=color[classes[i] % class_n], alpha=0.3)
+                   marker='o', c=colors[classes[i] % class_n], alpha=0.3)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.margins(0.2)
@@ -109,3 +181,5 @@ if __name__ == '__main__':
     data[1,1,0] = 1
     data[2,3,1] = 1
     mat_scatter(data, [0,1])
+
+

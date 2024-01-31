@@ -217,7 +217,7 @@ class Network:
             test_cost, test_accr = self.layers[-1].accuracy(test_y.T)
             self._forword(training_x)
             training_cost, training_accr = self.layers[-1].accuracy(training_y.T)
-            weight_cost = 0.0 # 代价函数规范化项
+            weight_cost = 0.0    # 代价函数规范化项
             for layer in self.layers:
                 weight_cost += np.sum(layer.w**2)
             weight_cost = lmbda * weight_cost / (2 * self.num_training_batch)
@@ -231,7 +231,8 @@ class Network:
             self.epoch += 1
         print("Finished training network.")
         print("Best test accuracy of %.2f%% obtained at epoch %d\n"
-              "Corresponding training accuracy of %.2f%%" % self.best_test_accr)
+              "Corresponding training accuracy of %.2f%%" %
+              (self.best_test_accr[1], self.best_test_accr[0], self.best_test_accr[2]))
 
     def learning_rate(self, iteration):
         return self.eta

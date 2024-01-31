@@ -135,6 +135,7 @@ class SOM:
     学习核心：
         无
     """
+
     def __init__(self, data, network_size=10):
         self.n, self.m = data.shape
         self.net_size = network_size
@@ -148,7 +149,7 @@ class SOM:
     def train(self, cycle_count=100):
         sigma_0 = 0.5 * self.net_size
         tau_1 = 1e3 / np.log(sigma_0)
-        ita_0 = 0.1;
+        ita_0 = 0.1
         tau_2 = 1e3
         total_cycle_count = self.cycle_i + cycle_count
         while self.cycle_i < total_cycle_count:
@@ -178,5 +179,41 @@ class SOM:
                 distance[:, :, i] = np.sum((self.network - data[: , i])**2, axis=2)
                 i += 1
         return distance == np.max(distance, axis=(0, 1))
+
+
+def test_bp():
+    """
+    Test of BP Algorithm
+
+        易陷入局部最优。考虑对错分样本单独学习，而不是乱序对所有样本进行学习
+    """
+    dataname = 'watermelon_3.0'
+    data, label, tag = pre.read(dataname)
+    print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
+    n = MFF1(data, label, hidden_neuron_count=4)
+    post.item_print('initial error', 0.5 * np.mean(np.linalg.norm(n.label.T - n.classify(data), axis=0)))
+    n.train(200, True)
+    post.item_print('hidden-layyer w', n.hidden_layer.w, True)
+    post.item_print('hidden-layyer b', n.hidden_layer.b, True)
+    post.item_print('output-layyer w', n.output_layer.w, True)
+    post.item_print('output-layyer b', n.output_layer.b, True)
+    post.item_print('final error', 0.5 * np.mean(np.linalg.norm(n.label.T - n.classify(data), axis=0)))
+
+
+def test_som():
+    """
+    Test of SOM Network
+    """
+    dataname = 'watermelon_3.0alpha'
+    data, label, tag = pre.read(dataname)
+    print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
+    n = SOM(data, network_size=10)
+    n.train(cycle_count=2000)
+    post.mat_scatter(n.classify(data), label)
+
+
+if __name__ == '__main__':
+    #test_bp()
+    test_som()
 
 

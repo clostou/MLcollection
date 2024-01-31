@@ -14,7 +14,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 def item_print(tag, obj, newline=False, indent=2):
     if newline:
-        text = '\n'.join(map(lambda s: ' ' * indent + s, str(object).split('\n')))
+        text = '\n'.join(map(lambda s: ' ' * indent + s, str(obj).split('\n')))
         print('%s:\n%s' % (tag, text))
     else:
         print('%s: %s' % (tag, obj))
@@ -67,6 +67,8 @@ def plot(data, label, line=None, title=None, tag=None):
 class PlotAniNet:
     """
     以交互模式在同一子图中动态绘制多条曲线。
+
+    用于：神经网络训练可视化
     """
 
     def __init__(self, title='', xlabel='x', ylabel='y', line_count=1, legend=None):
@@ -101,10 +103,6 @@ class PlotAniNet:
         self.ax.autoscale_view()
         plt.pause(0.001)
 
-    def __del__(self):
-        if plt:
-            plt.close(self.fig)
-
 
 class PlotAniOptim:
     """
@@ -118,29 +116,37 @@ class PlotAniOptim:
         self.fig = plt.figure(figsize=(12, 6))
         self.fig.suptitle(title)
         self.ax_list = []
+        self.contour_list = []
         self.line_list = []
         for i in range(layout[0]):
             ax = self.fig.add_subplot(layout[1], layout[2], i + 1)
             ax.set_title(subtitle[i])
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.grid()
             self.ax_list.append(ax)
+            self.contour_list.append(None)
             line, = ax.plot([], [], 'r-o', linewidth='0.8', markersize='1')
             self.line_list.append(line)
         self.fig.tight_layout()
         self.fig.show()
 
-    def plotFunc(self, func, xrange, yrange, nline=10):
-        x = np.linspace(*xrange, nline * 10)
-        y = np.linspace(*yrange, nline * 10)
+    def plotFunc(self, i, func, xrange, yrange, nline=3):
+        m = nline * 5
+        x = np.linspace(*xrange, m)
+        y = np.linspace(*yrange, m)
         X, Y = np.meshgrid(x, y)
-        Z = func(X, Y)
-        for ax in self.ax_list:
-            ax.contourf(X, Y, Z, nline, cmap='RdBu_r', linestyles='dashed', zorder=1)
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
-            ax.set_xlim(xrange)
-            ax.set_ylim(yrange)
-            ax.autoscale_view()
-            ax.grid()
+        _x = np.vstack((X.reshape((1, -1)), Y.reshape((1, -1))))
+        Z = func(_x).reshape((m, m))
+        ax = self.ax_list[i]
+        contour = self.contour_list[i]
+        if contour:
+            contour.remove()
+        contour = ax.contourf(X, Y, Z, nline, cmap='RdBu_r', linestyles='dashed', zorder=1)
+        self.contour_list.append(contour)
+        ax.set_xlim(xrange)
+        ax.set_ylim(yrange)
+        ax.autoscale_view()
         plt.pause(0.001)
 
     def addPoint(self, i, x, y):

@@ -46,7 +46,7 @@ def read(dataname: str):
             tag = f.readline()[: -1].split()
         except:
             raise ValueError("Fail to read data file '%s.dat'" % dataname)
-        data = np.zeros((info[0], info[1]), dtype=np.float)
+        data = np.zeros((info[0], info[1]), dtype=np.float32)
         label = []
         i = 0
         while i < info[0]:

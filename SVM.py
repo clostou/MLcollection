@@ -256,4 +256,4 @@ if __name__ == '__main__':
     post.item_print("Accuracy: ", smo.accuracy())
     #print(np.nonzero(smo.alphas)[0])
 
-    
+

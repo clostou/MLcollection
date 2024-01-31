@@ -4,9 +4,7 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # #
 
-
 import numpy as np
-import matplotlib.pyplot as plt
 import pre
 import post
 
@@ -187,9 +185,7 @@ def test_bp():
 
         易陷入局部最优。考虑对错分样本单独学习，而不是乱序对所有样本进行学习
     """
-    dataname = 'watermelon_3.0'
-    data, label, tag = pre.read(dataname)
-    print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
+    data, label, tag = pre.read('watermelon_3.0')
     n = MFF1(data, label, hidden_neuron_count=4)
     post.item_print('initial error', 0.5 * np.mean(np.linalg.norm(n.label.T - n.classify(data), axis=0)))
     n.train(200, True)
@@ -204,9 +200,7 @@ def test_som():
     """
     Test of SOM Network
     """
-    dataname = 'watermelon_3.0alpha'
-    data, label, tag = pre.read(dataname)
-    print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
+    data, label, tag = pre.read('watermelon_3.0alpha')
     n = SOM(data, network_size=10)
     n.train(cycle_count=2000)
     post.mat_scatter(n.classify(data), label)

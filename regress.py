@@ -6,7 +6,8 @@
 
 import numpy as np
 from optimization import Optimization, Newton
-import pre
+
+from pre import read
 import post
 
 
@@ -101,8 +102,7 @@ def test_logit():
     Test of Logit Regression
     """
     dataname = 'watermelon_3.0alpha'
-    data, label, tag = pre.read(dataname)
-    print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
+    data, label, tag = read(dataname)
     l = Logit(data, label)
     l.train()
     post.item_print('beta vector', l.beta, newline=True)
@@ -116,8 +116,7 @@ def test_rls():
     Test of Recursive Least Squares
     """
     dataname = 'watermelon_3.0alpha'
-    data, label, tag = pre.read(dataname)
-    print('database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, sep='\n')
+    data, label, tag = read(dataname)
     # 重映射样本标签
     label = list(map(lambda x: 2 * x - 1, label))
     # 以下4行：随机打乱数据集

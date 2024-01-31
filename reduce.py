@@ -23,6 +23,7 @@ class LDA:
             self.data.append(data[: , label_arr == label])
         self.n, _ = data.shape
         self.mu = np.mean(data, axis=1, keepdims=True)
+        self.W = None
 
     def train(self):
         Sb = np.zeros((self.n, self.n))    # 类间散度矩阵
@@ -41,5 +42,9 @@ class LDA:
 
     def classify(self, x):
         return np.dot(self.W.T, x)
+
+
+if __name__ == '__main__':
+    pass
 
 

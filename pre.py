@@ -60,6 +60,7 @@ def read(dataname: str):
             except:
                 raise ValueError('Invalid value in line %i' % (i + 3))
             i += 1
+    print('-' * 32, 'database: %s' % dataname, 'count: %i' % len(label), 'tags: %s' % tag, '-' * 32, sep='\n')
     return data.T, label, tag
 
 
@@ -76,3 +77,5 @@ def normalize(data: np.ndarray):
 if __name__ == '__main__':
     write('test', np.array([[1, 2, 0], [-1, 1, 2]]), [1, 1])
     data, label, tag = read('watermelon_3.0')
+
+

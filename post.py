@@ -6,6 +6,7 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
+from time import sleep
 
 
 plt.rcParams["font.sans-serif"] = ["SimHei"]
@@ -180,6 +181,94 @@ def mat_scatter(matrix, label, title='Data Distribution', xlabel='x', ylabel='y'
     ax.margins(0.2)
     ax.grid()
     fig.show()
+
+
+class PlotAniSVM:
+    """
+    以交互模式绘制数据散点图和一条直线（或闭合曲线），还可对部分数据点进行标注
+
+    用于：支持向量机训练可视化
+    """
+
+    def __init__(self, dataArr, labelArr, dim_1=0, dim_2=1, interval=0.01, divide=100):
+        self.dataArr = np.array(dataArr)
+        self.n, self.m = self.dataArr.shape
+        self.labelArr = np.array(labelArr).flatten()
+        self.t = interval
+        self.dim(dim_1, dim_2, divide)
+        plt.ion()
+        self.fig, self.ax = plt.subplots()
+        self.fig.canvas.manager.window.title('My Plotter')
+        self._startPlot()
+
+    def dim(self, dim_1, dim_2, divide):
+        self.dim1 = dim_1
+        lower = np.min(self.dataArr[dim_1, :])
+        upper = np.max(self.dataArr[dim_1, :])
+        x = np.linspace(1.2 * lower - 0.2 * upper, 1.2 * upper - 0.2 * lower, divide)
+        self.dim2 = dim_2
+        lower = np.min(self.dataArr[dim_2, :])
+        upper = np.max(self.dataArr[dim_2, :])
+        y = np.linspace(1.2 * lower - 0.2 * upper, 1.2 * upper - 0.2 * lower, divide)
+        X, Y = np.meshgrid(x, y)
+        dataArr = np.zeros((self.n, divide, divide))
+        dataArr[dim_1, :, :] = X
+        dataArr[dim_2, :, :] = Y
+        dataArr = dataArr.reshape((self.n, -1))
+        self._x = x
+        self._X = X
+        self._Y = Y
+        self._shape = (divide, divide)
+        self._dataArr = dataArr
+
+    def _startPlot(self):
+        self.ax.set_autoscaley_on(True)
+        self.ax.set_xlabel('$dim_%s$' % self.dim1)
+        self.ax.set_ylabel('$dim_%s$' % self.dim2)
+        self.sv, = self.ax.plot([], [], 'ro', markerfacecolor='none')
+        self.line, = self.ax.plot([], [], c='b')
+        self._contour = None
+        plt.grid(True)
+        self.count = 0
+
+    def scatter(self):
+        self.ax.cla()
+        self._startPlot()
+        self.ax.scatter(self.dataArr[self.dim1, :],
+                        self.dataArr[self.dim2, :],
+                        c=self.labelArr)
+        self.ax.set_title("count: %i" % self.m)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+        sleep(self.t)
+
+    def plotLine(self, w, b, sv=None):
+        self.count += 1
+        self.line.set_xdata(self._x)
+        self.line.set_ydata(- (w[self.dim1, 0] * self._x + b) / w[self.dim2, 0])
+        if len(sv):
+            self.sv.set_xdata(self.dataArr[self.dim1, sv])
+            self.sv.set_ydata(self.dataArr[self.dim2, sv])
+        self.ax.set_title("iteration: %i" % self.count)
+        # self.ax.relim()
+        # self.ax.autoscale_view()
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+        sleep(self.t)
+
+    def plotContour(self, classify, sv=None):
+        self.count += 1
+        labels = classify(self._dataArr).reshape(self._shape)
+        if self._contour:
+            self._contour.remove()
+        self._contour = self.ax.contour(self._X, self._Y, labels, [0.], colors='b')
+        if len(sv):
+            self.sv.set_xdata(self.dataArr[self.dim1, sv])
+            self.sv.set_ydata(self.dataArr[self.dim2, sv])
+        self.ax.set_title("iteration: %i" % self.count)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+        sleep(self.t)
 
 
 if __name__ == '__main__':

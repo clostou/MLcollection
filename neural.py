@@ -213,7 +213,7 @@ def test_som():
 
 
 if __name__ == '__main__':
-    #test_bp()
-    test_som()
+    test_bp()
+    #test_som()
 
 

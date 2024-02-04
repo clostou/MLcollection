@@ -12,7 +12,7 @@ from pre import read
 import post
 
 
-__all__ = ['Logit', 'RLS']
+__all__ = ['Logit', 'RLS', 'CurveFitting']
 
 
 class Logit:

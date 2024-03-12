@@ -42,6 +42,8 @@ class SMO:
                 break
             iterNum += 1
         self.counter[4] += time()
+        if iterNum == maxIter:
+            print("Max iterations %i reached" % maxIter)
     
     def train_visual(self, maxIter, **kwargs):
         # 同train函数，但会动态绘制迭代过程
@@ -74,7 +76,7 @@ class SMO:
         self.b = 0.
         self.eCache = - np.copy(self.labelMat)
         # 初值不是最优解但满足KTT条件，需要手动对所有样本进行一轮循环
-        alphaIList = np.arange(self.m)
+        alphaIList = np.arange(self.m, dtype=np.int64)
         outer_ind = 0
         while outer_ind < len(alphaIList):
             i = alphaIList[outer_ind]

@@ -5,7 +5,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
-from scipy.linalg import eig
+from scipy.linalg import eigh
 
 from pre import read
 import post
@@ -28,7 +28,7 @@ class LDA:
         self.mu = np.mean(data, axis=1, keepdims=True)
         self.W = None
 
-    def train(self, ndim=2):
+    def train(self, ndim=None):
         Sb = np.zeros((self.n, self.n))    # 类间散度矩阵
         Sw = Sb.copy()    # 类内散度矩阵
         for s in self.data:
@@ -38,10 +38,10 @@ class LDA:
             Sb += m * np.dot(vb, vb.T)
             vw = s - np.tile(mu, (1, m))
             Sw += np.dot(vw, vw.T)
-        d, p = eig(Sb, Sw)    # 广义特征值分解
+        d, p = eigh(Sb, Sw)    # 广义特征值分解
         ind = np.argsort(d)[: -len(self.data): -1]
         ind = ind[np.abs(d[ind]) >= 1e-8]    # d'个最大非零广义特征值（d'<=N-1，其中N为类别数）
-        if ndim < len(ind):
+        if ndim and ndim < len(ind):
             ind = ind[: ndim]
         self.W = p[: , ind]
 
@@ -62,12 +62,12 @@ class PCA:
         self.n, self.m = data.shape
         self.W = None
 
-    def train(self, ndim=2):
+    def train(self, ndim=None):
         X = self.data - np.mean(self.data, axis=1, keepdims=True)
         conv = np.dot(X, X.T) / self.m
-        d, p = eig(conv)
-        ind = np.argsort(d)[: : -1]
-        if ndim < len(ind):
+        d, p = eigh(conv)
+        ind = np.argsort(d[np.abs(d) >= 1e-8])[: : -1]    # 去除无用特征（零特征值）
+        if ndim and ndim < len(ind):
             ind = ind[: ndim]
         self.W = p[: , ind]
 

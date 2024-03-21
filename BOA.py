@@ -100,7 +100,7 @@ class BOA:
       *使用了Pytorch库的自动微分功能
     """
 
-    def __init__(self, func, candidate_points, plot=False):
+    def __init__(self, func, candidate_points, lower=None, upper=None, plot=False):
         # 函数句柄func输入为列向量，输出为该点的函数值
         self.func = func
         self.point = None    # 观测点
@@ -113,6 +113,15 @@ class BOA:
         self._kernel_args = (10, 5)    # 高斯核的缩放因子及方差
 
         self.add_point(candidate_points)
+
+        if not isinstance(lower, type(None)) and np.size(lower) == len(self.point):
+            self.lower_x = torch.Tensor(lower).reshape((-1, 1))
+        else:
+            self.lower_x = torch.ones((len(self.point), 1)) * float('-inf')
+        if not isinstance(upper, type(None)) and np.size(upper) == len(self.point):
+            self.upper_x = torch.Tensor(upper).reshape((-1, 1))
+        else:
+            self.upper_x = torch.ones((len(self.point), 1)) * float('inf')
 
         self._with_plot = plot
         # 二维绘图变量
@@ -222,6 +231,14 @@ class BOA:
             alpha = self.alpha * math.sqrt(1 - self.beta2 ** self._k) / (1 - self.beta1 ** self._k)
             return alpha * self._m / (torch.sqrt(self._v) + self.eps)
 
+    def clipX(self, x):
+        # 值裁剪
+        ind = x < self.lower_x
+        x[ind] = self.lower_x[ind]
+        ind = x > self.upper_x
+        x[ind] = self.upper_x[ind]
+        return x
+
     def step(self, init_x, precision=1e-6, max_iter=200):
         # 使用自写的Adam优化器
         optimizer = self.Adam(1, 0.8, 0.95, 1e-30)
@@ -240,6 +257,7 @@ class BOA:
                 x.grad.zero_()
                 with torch.no_grad():
                     x += dx
+                    self.clipX(x)
                 last_acquire = acquire
                 iter += 1
         x_star = x.detach().numpy()
@@ -362,8 +380,29 @@ class BOA:
         self.ax3D_2.autoscale_view()
         plt.pause(0.5)
 
-    def search(self):
-        pass
+    def search(self, init_x, precision=1e-6, max_iter=200):
+        optimizer = self.Adam(1, 0.8, 0.95, 1e-30)
+        x = torch.Tensor(init_x).reshape((-1, 1))
+        x.requires_grad_(True)
+        iter = 0
+        last_value_pred = float('inf')
+        while iter < max_iter:
+            value_pred = self.regress(x)[0]
+            value_pred.backward()
+            if abs(value_pred.item() - last_value_pred) <= precision:
+                break
+            else:
+                dx = optimizer(x.grad)
+                x.grad.zero_()
+                with torch.no_grad():
+                    x += dx
+                    self.clipX(x)
+                last_value_pred = value_pred
+                iter += 1
+        if iter == max_iter:
+            print("Max iteration reached!")
+        return x.detach().numpy()
+
 
 
 def GPR_test():
@@ -413,11 +452,12 @@ if __name__ == '__main__':
     #boa = BOA(test_func, np.array([-6]).reshape(1, -1), plot=True)
     #boa.plot(plot_target=True)
     #boa.step([0])
-    boa = BOA(test_func2, np.array([-10, -10, 10, 8]).reshape((2, -1), order='F'), plot=True)
+    boa = BOA(test_func2, np.array([-10, -10, 10, 8]).reshape((2, -1), order='F'), upper=[float('inf'), 0], plot=True)
     boa.plot3D(plot_target=True)
-    for i in range(12):
+    for i in range(10):
         sleep(1)
         boa.step([0, 0])
         boa.plot3D(plot_target=True)
+    print(boa.search([0, 0]))
 
 

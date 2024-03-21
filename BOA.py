@@ -262,7 +262,7 @@ class BOA:
                 iter += 1
         x_star = x.detach().numpy()
         if iter == max_iter:
-            print("Step %i ended with:" % self.step_n, x_star.flatten(), "(iterN: %i)" % (iter + 1))
+            print("Step %i ended with:" % (self.step_n + 1), x_star.flatten(), "(iterN: %i)" % iter)
         else:
             self.add_point(x_star)
             self.step_n += 1
@@ -281,9 +281,9 @@ class BOA:
             optimizer.step(lambda : - self.acquisition_func(x))
             iter += 1
         x_star = x.detach().numpy()
-        print("Step %i ended with:" % self.step_n, x_star.flatten(), "(iterN: %i)" % iter)
         self.add_point(x_star)
         self.step_n += 1
+        print("Step %i ended with:" % self.step_n, x_star.flatten(), "(iterN: %i)" % iter)
 
     def _simple_range(self, dim, count=200, margin=0.2):
         x_simple = self.point[dim, :]
@@ -399,9 +399,12 @@ class BOA:
                     self.clipX(x)
                 last_value_pred = value_pred
                 iter += 1
+        x_star = x.detach().numpy()
         if iter == max_iter:
-            print("Max iteration reached!")
-        return x.detach().numpy()
+            print("Max iteration reached when searching!")
+        else:
+            print("Extreme value of GPR with %i points:" % self.point.shape[1], x_star.flatten())
+        return x_star
 
 
 
@@ -458,6 +461,6 @@ if __name__ == '__main__':
         sleep(1)
         boa.step([0, 0])
         boa.plot3D(plot_target=True)
-    print(boa.search([0, 0]))
+    boa.search([0, 0])
 
 

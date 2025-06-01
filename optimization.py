@@ -7,7 +7,7 @@
 import numpy as np
 from time import sleep
 
-from post import PlotAniOptim
+from .post import PlotAniOptim
 
 
 __all__ = ['Optimization', 'GDM', 'Momentum', 'RMSProp', 'AdaDelta', 'Adam', 'Newton']

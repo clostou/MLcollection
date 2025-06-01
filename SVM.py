@@ -7,8 +7,8 @@
 import numpy as np
 from time import time
 
-from pre import read
-import post
+from .pre import read
+from . import post
 
 
 class SMO:

@@ -12,7 +12,7 @@ from time import time
 import numpy as np
 import torch
 import torch.nn.functional as tf
-from post import PlotAniNet
+from .post import PlotAniNet
 
 
 '''问题

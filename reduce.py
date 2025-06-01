@@ -7,8 +7,11 @@
 import numpy as np
 from scipy.linalg import eigh
 
-from pre import read
-import post
+from .pre import read
+from . import post
+
+
+__all__ = ['LDA', 'PCA']
 
 
 class LDA:

@@ -5,11 +5,11 @@
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
-from optimization import Optimization, Newton
+from .optimization import Optimization, Newton
 import matplotlib.pyplot as plt
 
-from pre import read
-import post
+from .pre import read
+from . import post
 
 
 __all__ = ['Logit', 'RLS', 'CurveFitting']
@@ -123,6 +123,7 @@ class CurveFitting:
         self.xMat = np.concatenate((np.ones((self.m, 1)), np.mat(x).T), axis=1)
         self.yMat = np.mat(y).T
         self.k = k
+        self._width = (3 * k)**2    # width of calculation windows
         self.ret_code = 0
 
     def _LWLRegress(self, target_x, k):
@@ -130,16 +131,18 @@ class CurveFitting:
         LWLR prediction core, always called by other member functions.
         """
         weights = np.mat(np.eye(self.m))
-        for i in range(self.m):
-            diffX = self.xMat[i] - target_x
-            weights[i, i] = np.exp(-0.5 * diffX * diffX.T / k ** 2)
-        xTwx = self.xMat.T * weights * self.xMat
+        diffX = self.xMat - target_x
+        distance = np.einsum('ij,ij->i', diffX, diffX)
+        indices = distance < self._width
+        weights = np.mat(np.diag(np.exp(-0.5 * distance / k ** 2)[indices]))
+        xMat = self.xMat[indices]
+        yMat = self.yMat[indices]
+        xTwx = xMat.T * weights * xMat
         if np.linalg.det(xTwx) == 0:
             print('WARNING: Matrix shrink xTwx is singular when calculating:\n\t%s'
                   % target_x)
-            xTwx += np.mat(np.eye(self.n) * 1e-6)
-
-        ws = xTwx.I * self.xMat.T * weights * self.yMat
+            xTwx += np.mat(np.identity(self.n) * 1e-6)
+        ws = xTwx.I * xMat.T * weights * yMat
         return target_x * ws
 
     def Estimate(self, targetPoint, k=None):
@@ -211,7 +214,7 @@ class CurveFitting:
             ax.grid(True)
             plt.show()
         else:
-            return yHat
+            return scale, yHat
 
     def EstimateY(self, y, x_district, **kwargs):
         """Get x-value of any dimension(default 1) for given y-value in the initial district.
@@ -322,8 +325,8 @@ def test_lwlr():
 
 
 if __name__ == '__main__':
-    test_logit()
+    #test_logit()
     #test_rls()
-    #test_lwlr()
+    test_lwlr()
 
 

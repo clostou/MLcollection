@@ -198,7 +198,7 @@ class PlotAniSVM:
         self.dim(dim_1, dim_2, divide)
         plt.ion()
         self.fig, self.ax = plt.subplots()
-        self.fig.canvas.manager.window.setWindowTitle('My Plotter')
+        self.fig.canvas.manager.window.title('My Plotter')  # setWindowTitle
         self._startPlot()
 
     def dim(self, dim_1, dim_2, divide):

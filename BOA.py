@@ -450,19 +450,20 @@ def test_func2(x):
 
 
 if __name__ == '__main__':
-    GPR_test()
-    #boa = BOA(test_func, np.array([-6]).reshape(1, -1), plot=True)
-    #boa.plot(plot_target=True)
-    #boa.step([0])
-    #boa = BOA(test_func2, np.array([-10, -10, 10, 8]).reshape((2, -1), order='F'), upper=[float('inf'), 0], plot=True)
-    '''boa.plot3D(plot_target=True)
-    sleep(5)
-    print(123)
-    sleep(1)
+    #GPR_test()
+    '''boa = BOA(test_func, np.array([-6]).reshape(1, -1), plot=True)
+    boa.plot(plot_target=True)
+    sleep(3)
+    for _ in range(2):
+        boa.step([0])
+    boa.plot(plot_target=True)'''
+    boa = BOA(test_func2, np.array([-10, -10, 10, 8]).reshape((2, -1), order='F'), upper=[float('inf'), 0], plot=True)
+    boa.plot3D(plot_target=True)
+    sleep(3)
     for i in range(10):
-        sleep(1)
         boa.step([0, 0])
         boa.plot3D(plot_target=True)
-    boa.search([0, 0])'''
+        sleep(1)
+    boa.search([0, 0])
 
 

@@ -19,4 +19,6 @@ ML Collection
     仰望 (Github@clostou)
 """
 
+from . import reduce, regress, BOA, SVM
+
 

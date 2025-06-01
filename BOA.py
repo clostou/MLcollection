@@ -407,7 +407,6 @@ class BOA:
         return x_star
 
 
-
 def GPR_test():
     f = lambda x: x * np.sin(x)
     x_simple = np.array([1, 3, 5, 6, 7, 8])

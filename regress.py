@@ -5,14 +5,14 @@
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
-from .optimization import Optimization, Newton
+from ML.optimization import Optimization, Newton
 import matplotlib.pyplot as plt
 
-from .pre import read
-from . import post
+from ML.pre import read
+from ML import post
 
 
-__all__ = ['Logit', 'RLS', 'CurveFitting']
+__all__ = ['Logit', 'RLS', 'RBF', 'CurveFitting']
 
 
 class Logit:
@@ -96,6 +96,62 @@ class RLS:
 
     def classify(self, x):
         return np.dot(self.w[: -1, 0], x) + self.w[-1, 0]
+
+
+class RBF:
+    """
+    线性回归/自适应滤波器 - 径向基函数网络
+
+    学习核心：
+        k均值算法、最小二乘法
+    """
+
+    def __init__(self, data, value):
+        self.data = np.array(data)
+        self.n, self.m = data.shape
+        self.value = np.array(value).flatten()
+        self.center = None
+        self.sigma = None
+        self.weight = None
+
+    def _cluster(self, k=5):
+        # 使用无监督方法k-means计算聚类中心
+        index = np.random.choice(np.arange(self.m), k, replace=False)
+        center = self.data[:, index]
+        while True:
+            cluster = [[] for _ in range(k)]
+            for i in range(self.m):
+                point = self.data[:, i: i + 1]
+                distance = np.linalg.norm(center - point, axis=0)
+                cluster[np.argmin(distance)].append(point)
+            new_center = []
+            for i, c in enumerate(cluster):
+                if len(c) > 0:
+                    new_center.append(np.hstack(c).mean(axis=1, keepdims=True))
+                else:  # 可能存在空簇
+                    new_center.append(center[:, i: i + 1])
+            new_center = np.hstack(new_center)
+            if (new_center == center).all():
+                return center
+            else:
+                center = new_center
+
+    def train(self, n=5):
+        # 计算聚类中心和标准差
+        self.center = self._cluster(k=n)
+        distance = np.linalg.norm(self.center[np.newaxis].T - self.data[np.newaxis], axis=1)
+        self.sigma = np.std(distance, axis=1)
+        # 计算基函数到输出的权重
+        act_value = np.exp(- distance.T / (2 * self.sigma**2))  # (m, k)
+        A = np.hstack([act_value, np.ones((self.m, 1))])  # A = act_value
+        ATA_inv = np.linalg.inv(np.dot(A.T, A))
+        ATb = np.dot(A.T, self.value)
+        self.weight = np.dot(ATA_inv, ATb)
+
+    def regress(self, x):
+        distance = np.linalg.norm(self.center[np.newaxis].T - x[np.newaxis], axis=1)
+        act_value = np.exp(- distance.T / (2 * self.sigma ** 2))  # (m, k) or (k, )
+        return np.dot(act_value, self.weight[: -1]) + self.weight[-1]  # return np.dot(act_value, self.weight)
 
 
 class CurveFitting:
@@ -301,6 +357,34 @@ def test_rls():
     post.plot(data, label, line=l.w, title=dataname, tag=tag)
 
 
+def test_rbf():
+    """
+    Test of Radial Basis Function
+    """
+    from ML.reduce import PCA
+    dataname = 'abalone'
+    data, label, tag = read(dataname)
+    l = RBF(data, label)
+    l.train(n=10)
+    # 打印拟合结果
+    error = np.abs((l.regress(data) / np.array(label)) - 1).sum() / len(label)
+    post.item_print('w matrix', l.weight, newline=True)
+    post.item_print('average error', "%.2f%%" % (error * 100), newline=True)
+    # 绘制k均值聚类
+    l2 = PCA(data)
+    l2.train(2)
+    center = l2.project(l.center)
+    fig, ax = plt.subplots()
+    ax.scatter(*l2.project(data))
+    ax.scatter(*center, s=200, c='r')
+    for i, p in enumerate(center.T):
+        circle = plt.Circle(p.tolist(), 2 * l.sigma[i], color='gray', fill=False, linewidth=1)
+        fig.gca().add_patch(circle)
+    ax.grid()
+    ax.autoscale()
+    plt.show()
+
+
 def test_lwlr():
     # 实验力学-实验九
     X = [10.00, 11.00, 12.00, 13.00, 14.00, 15.00, 16.00, 17.00, 17.25, 17.50, 17.75, 18.00, 18.25, 18.50,
@@ -327,6 +411,7 @@ def test_lwlr():
 if __name__ == '__main__':
     #test_logit()
     #test_rls()
-    test_lwlr()
+    test_rbf()
+    #test_lwlr()
 
 

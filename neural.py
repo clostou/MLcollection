@@ -5,8 +5,8 @@
 # # # # # # # # # # # # # # # # # # # # # # # #
 
 import numpy as np
-from . import pre
-from . import post
+from ML import pre
+from ML import post
 
 
 class _Layer:

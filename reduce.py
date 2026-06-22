@@ -7,8 +7,8 @@
 import numpy as np
 from scipy.linalg import eigh
 
-from .pre import read
-from . import post
+from ML.pre import read
+from ML import post
 
 
 __all__ = ['LDA', 'PCA']
@@ -47,6 +47,8 @@ class LDA:
         if ndim and ndim < len(ind):
             ind = ind[: ndim]
         self.W = p[: , ind]
+        ratio = 100. * np.sum(d[ind]) / np.sum(d)
+        print(f"LDA: {len(ind):d}/{len(self.data) - 1:d}, Recon. {ratio:.2f}%")
 
     def project(self, x):
         return np.dot(self.W.T, x)
@@ -69,10 +71,15 @@ class PCA:
         X = self.data - np.mean(self.data, axis=1, keepdims=True)
         conv = np.dot(X, X.T) / self.m
         d, p = eigh(conv)
-        ind = np.argsort(d[np.abs(d) >= 1e-8])[: : -1]    # 去除无用特征（零特征值）
+        # 去除无用特征（零特征值）
+        ind = np.argsort(d)[: : -1]
+        ind = ind[np.abs(d[ind]) >= 1e-8]    # d'个最大非零特征值（d'<=m-1，其中m为样本数）
         if ndim and ndim < len(ind):
             ind = ind[: ndim]
         self.W = p[: , ind]
+        # self.W /= np.linalg.norm(self.W, axis=0)    # 特征向量归一化
+        ratio = 100. * np.sum(d[ind]) / np.sum(d)
+        print(f"PCA: {len(ind):d}/{len(d):d}, Recon. {ratio:.2f}%")
 
     def project(self, x):
         return np.dot(self.W.T, x)

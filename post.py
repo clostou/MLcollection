@@ -6,7 +6,7 @@
 
 import numpy as np
 from matplotlib import pyplot as plt
-from time import sleep
+import time
 
 
 plt.rcParams["font.sans-serif"] = ["SimHei"]
@@ -65,6 +65,35 @@ def plot(data, label, line=None, title=None, tag=None):
     plt.show()
 
 
+class Timer:
+    """
+    可重复使用的计时器
+    """
+
+    def __init__(self):
+        self.times = []
+        self.tik = .0
+
+    def start(self):
+        self.tik = time.time()
+
+    def stop(self):
+        self.times.append(time.time() - self.tik)
+        return self.times[-1]
+
+    def reset(self):
+        self.times.clear()
+
+    def avg(self):
+        return sum(self.times) / len(self.times)
+
+    def sum(self):
+        return sum(self.times)
+
+    def cumsum(self):
+        return np.array(self.times).cumsum().tolist()
+
+
 class PlotAniNet:
     """
     以交互模式在同一子图中动态绘制多条曲线。
@@ -90,10 +119,17 @@ class PlotAniNet:
         if legend:
             self.ax.legend(legend)
         self.fig.show()
+        plt.pause(0.01)
 
-    def add(self, ind, x, y):
+    def add_i(self, ind, x, y):
         self.xdata[ind].append(x)
         self.ydata[ind].append(y)
+
+    def add(self, x, *y):
+        i = 0
+        while i < len(y):
+            self.add_i(i, x, y[i])
+            i += 1
 
     def update(self):
         i = 0
@@ -102,7 +138,7 @@ class PlotAniNet:
             i += 1
         self.ax.relim()
         self.ax.autoscale_view()
-        plt.pause(0.001)
+        plt.pause(0.01)
 
 
 class PlotAniOptim:
@@ -131,6 +167,7 @@ class PlotAniOptim:
             self.line_list.append(line)
         self.fig.tight_layout()
         self.fig.show()
+        plt.pause(0.01)
 
     def plotFunc(self, i, func, xrange, yrange, nline=3):
         m = nline * 5
@@ -148,14 +185,14 @@ class PlotAniOptim:
         ax.set_xlim(xrange)
         ax.set_ylim(yrange)
         ax.autoscale_view()
-        plt.pause(0.001)
+        plt.pause(0.01)
 
     def addPoint(self, i, x, y):
         line = self.line_list[i]
         xdata, ydata = line.get_data()
         line.set_data(np.append(xdata, x), np.append(ydata, y))
         self.ax_list[i].set_title(f"{self.subtitle[i]} - iter {len(xdata)}")
-        plt.pause(0.001)
+        plt.pause(0.01)
 
 
 def mat_scatter(matrix, label, title='Data Distribution', xlabel='x', ylabel='y', colors=None):
@@ -240,7 +277,7 @@ class PlotAniSVM:
         self.ax.set_title("count: %i" % self.m)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-        sleep(self.t)
+        time.sleep(self.t)
 
     def plotLine(self, w, b, sv=None):
         self.count += 1
@@ -254,7 +291,7 @@ class PlotAniSVM:
         # self.ax.autoscale_view()
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-        sleep(self.t)
+        time.sleep(self.t)
 
     def plotContour(self, classify, sv=None):
         self.count += 1
@@ -268,7 +305,7 @@ class PlotAniSVM:
         self.ax.set_title("iteration: %i" % self.count)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-        sleep(self.t)
+        time.sleep(self.t)
 
 
 if __name__ == '__main__':

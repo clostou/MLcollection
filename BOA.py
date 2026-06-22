@@ -21,13 +21,13 @@ class GPR:
     高斯过程回归 (Gaussian Process Regression)
     """
     
-    def __init__(self, initial_point, values):
+    def __init__(self, initial_point, values, sigma=1.1):
         self.point = None
         self.value = None
         self.mean = None
         self.conv = None
         self._mean_args = (0.0, )
-        self._kernel_args = (1.0, 1.1)
+        self._kernel_args = (1.0, sigma)
         
         self.set_point(initial_point, values)
         
@@ -100,7 +100,8 @@ class BOA:
       *使用了Pytorch库的自动微分功能
     """
 
-    def __init__(self, func, candidate_points, lower=None, upper=None, plot=False):
+    def __init__(self, func, candidate_points, lower=None, upper=None, plot=False,
+                 m=0.0, s=1.0, p=1.0):
         # 函数句柄func输入为列向量，输出为该点的函数值
         self.func = func
         self.point = None    # 观测点
@@ -109,8 +110,8 @@ class BOA:
         self.conv = None    # 观测点的协方差
         self.step_n = 0
 
-        self._mean_args = (0.0,)
-        self._kernel_args = (10, 5)    # 高斯核的缩放因子及方差
+        self._mean_args = (m,)
+        self._kernel_args = (s, p)    # 高斯核的缩放因子及方差
 
         self.add_point(candidate_points)
 
@@ -139,6 +140,7 @@ class BOA:
         return torch.ones(x.shape[1]) * self._mean_args[0]
 
     def kernel_func(self, x1, x2, diag_only=False):
+        # 高斯核，与nu->∞时的Matern核等价（业界常用的是Matern 5/3核，详见wikipedia）
         if diag_only:
             m = min(x1.shape[1], x2.shape[1])
             delta = torch.empty(m)
@@ -147,7 +149,7 @@ class BOA:
                 delta[i] = torch.dot(dx, dx)
         else:
             delta = torch.sum(torch.pow(torch.unsqueeze(x1.T, 2) - torch.unsqueeze(x2, 0), 2), axis=1)
-        return self._kernel_args[0] * torch.exp(delta / (- 2 * self._kernel_args[1] ** 2))
+        return self._kernel_args[0] ** 2 * torch.exp(delta / (- 2 * self._kernel_args[1] ** 2))
 
     def add_point(self, points):
         if isinstance(self.point, type(None)):
@@ -450,14 +452,15 @@ def test_func2(x):
 
 
 if __name__ == '__main__':
-    #GPR_test()
+    # GPR_test()
     '''boa = BOA(test_func, np.array([-6]).reshape(1, -1), plot=True)
     boa.plot(plot_target=True)
     sleep(3)
     for _ in range(2):
         boa.step([0])
     boa.plot(plot_target=True)'''
-    boa = BOA(test_func2, np.array([-10, -10, 10, 8]).reshape((2, -1), order='F'), upper=[float('inf'), 0], plot=True)
+    boa = BOA(test_func2, np.array([-10, -10, 10, 8]).reshape((2, -1), order='F'),
+              s=3.0, p=5.0, upper=[float('inf'), 0], plot=True)
     boa.plot3D(plot_target=True)
     sleep(3)
     for i in range(10):
